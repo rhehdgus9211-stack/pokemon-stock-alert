@@ -83,15 +83,12 @@ async def check_product(page, url):
     ).inner_text()
 
 
-    print(text[:500])
+    if "구매불가" in text:
+
+        return "soldout"
 
 
-    if "구매하기" in text:
-
-        return "available"
-
-
-    return "soldout"
+    return "available"
 
 
 
