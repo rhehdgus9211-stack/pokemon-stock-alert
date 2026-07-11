@@ -12,6 +12,7 @@ jobs:
 
     runs-on: ubuntu-latest
 
+
     steps:
 
       - name: 코드 가져오기
@@ -24,11 +25,12 @@ jobs:
           python-version: "3.x"
 
 
-      - name: 필요한 라이브러리 설치
+      - name: 라이브러리 설치
         run: |
-          pip install requests
+          pip install requests playwright
+          playwright install chromium
 
 
-      - name: 재고 확인 실행
+      - name: 재고 확인
         run: |
           python pokemon_checker.py
