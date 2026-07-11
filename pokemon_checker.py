@@ -1,6 +1,8 @@
-import requests
 import json
 import os
+import asyncio
+from playwright.async_api import async_playwright
+import requests
 
 
 NTFY_TOPIC = "pokemoncard-7a92kf381"
@@ -17,30 +19,19 @@ PRODUCTS = {
 }
 
 
+
 def send_ntfy(message):
 
-    try:
-        response = requests.post(
-            f"https://ntfy.sh/{NTFY_TOPIC}",
-            data=message.encode("utf-8"),
-            headers={
-                "Title": "Pokemon Card Alert",
-                "Priority": "high",
-                "Tags": "tada"
-            },
-            timeout=10
-        )
+    requests.post(
+        f"https://ntfy.sh/{NTFY_TOPIC}",
+        data=message.encode("utf-8"),
+        headers={
+            "Title": "Pokemon Card Alert",
+            "Priority": "high",
+            "Tags": "tada"
+        }
+    )
 
-        print(
-            "ntfy 전송:",
-            response.status_code
-        )
-
-    except Exception as e:
-        print(
-            "ntfy 오류:",
-            e
-        )
 
 
 def load_status():
@@ -76,77 +67,96 @@ def save_status(status):
 
 
 
-def check_product(url):
+async def check_product(page, url):
 
-    headers = {
-        "User-Agent": "Mozilla/5.0"
-    }
-
-    response = requests.get(
+    await page.goto(
         url,
-        headers=headers,
-        timeout=15
+        wait_until="networkidle",
+        timeout=60000
     )
 
-    text = response.text
+    await page.wait_for_timeout(3000)
 
 
-    # 구매 가능 상태
+    text = await page.locator(
+        "body"
+    ).inner_text()
+
+
+    print(text[:500])
+
+
     if "구매하기" in text:
+
         return "available"
 
 
-    # 구매불가 상태
     return "soldout"
 
 
 
-old_status = load_status()
+async def main():
 
-new_status = {}
+    old_status = load_status()
 
-
-
-for name, url in PRODUCTS.items():
-
-    try:
-
-        current = check_product(url)
-
-        new_status[name] = current
+    new_status = {}
 
 
-        before = old_status.get(
-            name,
-            "soldout"
+    async with async_playwright() as p:
+
+        browser = await p.chromium.launch(
+            headless=True
         )
 
 
-        print(
-            name,
-            current
-        )
+        page = await browser.new_page()
 
 
-        # 구매불가 -> 구매가능 변경 감지
+        for name, url in PRODUCTS.items():
 
-        if before == "soldout" and current == "available":
+            try:
 
-            send_ntfy(
-                f"🔥 포켓몬 카드 재입고 감지!\n\n"
-                f"{name}\n\n"
-                f"{url}"
-            )
-
-
-    except Exception as e:
-
-        print(
-            name,
-            "오류:",
-            e
-        )
+                current = await check_product(
+                    page,
+                    url
+                )
 
 
+                new_status[name] = current
 
-save_status(new_status)
+
+                before = old_status.get(
+                    name,
+                    "soldout"
+                )
+
+
+                print(
+                    name,
+                    current
+                )
+
+
+                if before == "soldout" and current == "available":
+
+                    send_ntfy(
+                        f"🔥 포켓몬 카드 재입고 감지!\n\n{name}\n\n{url}"
+                    )
+
+
+            except Exception as e:
+
+                print(
+                    name,
+                    e
+                )
+
+
+        await browser.close()
+
+
+    save_status(new_status)
+
+
+
+asyncio.run(main())
