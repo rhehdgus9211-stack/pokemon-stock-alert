@@ -1,5 +1,4 @@
 import requests
-import time
 
 NTFY_TOPIC = "pokemoncard-7a92kf381"
 
@@ -10,9 +9,6 @@ PRODUCTS = {
     "카드박스4": "https://www.pokemonstore.co.kr/pages/product/product-detail.html?productNo=114165789",
     "카드박스5": "https://www.pokemonstore.co.kr/pages/product/product-detail.html?productNo=114167543",
 }
-
-
-last_status = {}
 
 
 def send_ntfy(message):
@@ -30,8 +26,7 @@ def send_ntfy(message):
 def check_product(name, url):
 
     headers = {
-        "User-Agent":
-        "Mozilla/5.0"
+        "User-Agent": "Mozilla/5.0"
     }
 
     response = requests.get(
@@ -48,38 +43,22 @@ def check_product(name, url):
     return True
 
 
+for name, url in PRODUCTS.items():
 
-while True:
+    try:
 
-    for name, url in PRODUCTS.items():
+        available = check_product(
+            name,
+            url
+        )
 
-        try:
-
-            now = check_product(
-                name,
-                url
+        if available:
+            send_ntfy(
+                f"🔥 구매 가능 상태 감지!\n\n{name}\n{url}"
             )
 
-            before = last_status.get(
-                name,
-                False
-            )
-
-            if now and not before:
-
-                send_ntfy(
-                    f"🔥 재입고 가능!\n\n{name}\n{url}"
-                )
-
-            last_status[name] = now
-
-
-        except Exception as e:
-
-            print(
-                name,
-                e
-            )
-
-
-    time.sleep(300)
+    except Exception as e:
+        print(
+            name,
+            e
+        )
