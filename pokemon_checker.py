@@ -11,11 +11,20 @@ STATUS_FILE = "status.json"
 
 
 PRODUCTS = {
-    "카드박스1": "https://www.pokemonstore.co.kr/pages/product/product-detail.html?productNo=114169373",
-    "카드박스2": "https://www.pokemonstore.co.kr/pages/product/product-detail.html?productNo=124381031",
-    "카드박스3": "https://www.pokemonstore.co.kr/pages/product/product-detail.html?productNo=116178963",
-    "카드박스4": "https://www.pokemonstore.co.kr/pages/product/product-detail.html?productNo=114165789",
-    "카드박스5": "https://www.pokemonstore.co.kr/pages/product/product-detail.html?productNo=114167543",
+    "포켓몬 카드 151":
+    "https://www.pokemonstore.co.kr/pages/product/product-detail.html?productNo=114169373",
+
+    "테라스탈 페스타 ex":
+    "https://www.pokemonstore.co.kr/pages/product/product-detail.html?productNo=124381031",
+
+    "샤이니트레저 ex":
+    "https://www.pokemonstore.co.kr/pages/product/product-detail.html?productNo=116178963",
+
+    "이브이 히어로즈":
+    "https://www.pokemonstore.co.kr/pages/product/product-detail.html?productNo=114165789",
+
+    "VSTAR 유니버스":
+    "https://www.pokemonstore.co.kr/pages/product/product-detail.html?productNo=114167543",
 }
 
 
