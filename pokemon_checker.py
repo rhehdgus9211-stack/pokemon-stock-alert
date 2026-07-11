@@ -13,16 +13,18 @@ PRODUCTS = {
 
 def send_ntfy(message):
     try:
-        requests.post(
+        response = requests.post(
             f"https://ntfy.sh/{NTFY_TOPIC}",
             data=message.encode("utf-8"),
             headers={
-                "Title": "포켓몬스토어 재입고 알림",
+                "Title": "Pokemon Card Alert",
                 "Priority": "high",
                 "Tags": "tada"
             },
             timeout=10
         )
+
+        print("ntfy 전송 결과:", response.status_code)
 
     except Exception as e:
         print("ntfy 오류:", e)
