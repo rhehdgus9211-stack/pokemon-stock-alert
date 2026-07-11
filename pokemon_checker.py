@@ -1,6 +1,12 @@
 import requests
+import json
+import os
+
 
 NTFY_TOPIC = "pokemoncard-7a92kf381"
+
+STATUS_FILE = "status.json"
+
 
 PRODUCTS = {
     "카드박스1": "https://www.pokemonstore.co.kr/pages/product/product-detail.html?productNo=114169373",
@@ -12,6 +18,7 @@ PRODUCTS = {
 
 
 def send_ntfy(message):
+
     try:
         response = requests.post(
             f"https://ntfy.sh/{NTFY_TOPIC}",
@@ -24,13 +31,52 @@ def send_ntfy(message):
             timeout=10
         )
 
-        print("ntfy 전송 결과:", response.status_code)
+        print(
+            "ntfy 전송:",
+            response.status_code
+        )
 
     except Exception as e:
-        print("ntfy 오류:", e)
+        print(
+            "ntfy 오류:",
+            e
+        )
 
 
-def check_product(name, url):
+def load_status():
+
+    if os.path.exists(STATUS_FILE):
+
+        with open(
+            STATUS_FILE,
+            "r",
+            encoding="utf-8"
+        ) as f:
+
+            return json.load(f)
+
+    return {}
+
+
+
+def save_status(status):
+
+    with open(
+        STATUS_FILE,
+        "w",
+        encoding="utf-8"
+    ) as f:
+
+        json.dump(
+            status,
+            f,
+            ensure_ascii=False,
+            indent=2
+        )
+
+
+
+def check_product(url):
 
     headers = {
         "User-Agent": "Mozilla/5.0"
@@ -44,48 +90,50 @@ def check_product(name, url):
 
     text = response.text
 
-    # 현재 품절 상태
-    if "구매불가" in text:
-        return False
 
     # 구매 가능 상태
-    return True
+    if "구매하기" in text:
+        return "available"
+
+
+    # 구매불가 상태
+    return "soldout"
 
 
 
-# =========================
-# 테스트 알림
-# (테스트 후 삭제 예정)
-# =========================
+old_status = load_status()
 
-send_ntfy(
-    "🔥 포켓몬스토어 알림 테스트 성공!"
-)
+new_status = {}
 
 
-# =========================
-# 상품 확인
-# =========================
 
 for name, url in PRODUCTS.items():
 
     try:
 
-        available = check_product(
+        current = check_product(url)
+
+        new_status[name] = current
+
+
+        before = old_status.get(
             name,
-            url
+            "soldout"
         )
+
 
         print(
             name,
-            "구매가능" if available else "구매불가"
+            current
         )
 
 
-        if available:
+        # 구매불가 -> 구매가능 변경 감지
+
+        if before == "soldout" and current == "available":
 
             send_ntfy(
-                f"🔥 구매 가능 상태 감지!\n\n"
+                f"🔥 포켓몬 카드 재입고 감지!\n\n"
                 f"{name}\n\n"
                 f"{url}"
             )
@@ -95,6 +143,10 @@ for name, url in PRODUCTS.items():
 
         print(
             name,
-            "확인 오류:",
+            "오류:",
             e
         )
+
+
+
+save_status(new_status)
