@@ -12,15 +12,20 @@ PRODUCTS = {
 
 
 def send_ntfy(message):
-    requests.post(
-        f"https://ntfy.sh/{NTFY_TOPIC}",
-        data=message.encode("utf-8"),
-        headers={
-            "Title": "포켓몬스토어 재입고 알림",
-            "Priority": "high",
-            "Tags": "tada"
-        }
-    )
+    try:
+        requests.post(
+            f"https://ntfy.sh/{NTFY_TOPIC}",
+            data=message.encode("utf-8"),
+            headers={
+                "Title": "포켓몬스토어 재입고 알림",
+                "Priority": "high",
+                "Tags": "tada"
+            },
+            timeout=10
+        )
+
+    except Exception as e:
+        print("ntfy 오류:", e)
 
 
 def check_product(name, url):
@@ -37,11 +42,28 @@ def check_product(name, url):
 
     text = response.text
 
+    # 현재 품절 상태
     if "구매불가" in text:
         return False
 
+    # 구매 가능 상태
     return True
 
+
+
+# =========================
+# 테스트 알림
+# (테스트 후 삭제 예정)
+# =========================
+
+send_ntfy(
+    "🔥 포켓몬스토어 알림 테스트 성공!"
+)
+
+
+# =========================
+# 상품 확인
+# =========================
 
 for name, url in PRODUCTS.items():
 
@@ -52,13 +74,25 @@ for name, url in PRODUCTS.items():
             url
         )
 
-        if available:
-            send_ntfy(
-                f"🔥 구매 가능 상태 감지!\n\n{name}\n{url}"
-            )
-
-    except Exception as e:
         print(
             name,
+            "구매가능" if available else "구매불가"
+        )
+
+
+        if available:
+
+            send_ntfy(
+                f"🔥 구매 가능 상태 감지!\n\n"
+                f"{name}\n\n"
+                f"{url}"
+            )
+
+
+    except Exception as e:
+
+        print(
+            name,
+            "확인 오류:",
             e
         )
