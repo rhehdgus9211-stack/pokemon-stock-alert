@@ -2,9 +2,13 @@ name: Pokemon Stock Checker
 
 on:
   schedule:
-    - cron: "*/5 * * * *"
+    - cron: "* * * * *"
 
   workflow_dispatch:
+
+
+permissions:
+  contents: write
 
 
 jobs:
@@ -34,3 +38,15 @@ jobs:
       - name: 재고 확인
         run: |
           python pokemon_checker.py
+
+
+      - name: 상태 저장
+        run: |
+          git config --global user.name "github-actions"
+          git config --global user.email "github-actions@github.com"
+
+          git add status.json
+
+          git commit -m "Update stock status" || echo "No changes"
+
+          git push
